@@ -38,7 +38,7 @@ python main.py
    - **Branch**: `main` (или `master`)
    - **Folder**: `/docs`
 4. Нажмите **Save**. Через 1–2 минуты игра будет доступна по адресу:
-   - `https://ВАШ_ЛОГИН.github.io/ИМЯ_РЕПОЗИТОРИЯ/`
+   - **https://meritsaturyan.github.io/arm_imposter_game/**
 
 Игра лежит в папке **docs/** (она уже настроена для GitHub Pages). Клиенту можно просто отправить эту ссылку.
 
