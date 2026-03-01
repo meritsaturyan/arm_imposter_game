@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arm Imposter — Խաղ Impostor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Armenian:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Menu -->
+    <section id="screen-menu" class="screen active">
+      <div class="bg-overlay"></div>
+      <div class="content">
+        <h1 class="title">Arm Imposter</h1>
+        <p class="sub">Խաղ Impostor հայերեն</p>
+        <button type="button" class="btn btn-red" data-action="go-setup">Սկսել խաղը</button>
+      </div>
+    </section>
+
+    <!-- Categories -->
+    <section id="screen-categories" class="screen">
+      <div class="bg-overlay"></div>
+      <div class="content">
+        <h2 class="title">Ընտրիր կատեգորիան</h2>
+        <p class="sub">Բառերը հայերեն են։</p>
+        <div class="btn-group">
+          <button type="button" class="btn btn-red" data-category="Հայ հայտնիներ">Հայ հայտնիներ</button>
+          <button type="button" class="btn btn-red" data-category="Համաշխարհային հայտնիներ">Համաշխարհային հայտնիներ</button>
+          <button type="button" class="btn btn-red" data-category="Կենդանիներ">Կենդանիներ</button>
+          <button type="button" class="btn btn-red" data-category="Առարկաներ">Առարկաներ</button>
+          <button type="button" class="btn btn-red" data-category="Վայրեր">Վայրեր</button>
+          <button type="button" class="btn btn-red" data-category="Բոլորը">Բոլորը</button>
+        </div>
+        <button type="button" class="btn btn-ghost" data-action="go-menu">Հետ</button>
+      </div>
+    </section>
+
+    <!-- Setup -->
+    <section id="screen-setup" class="screen">
+      <div class="bg-overlay"></div>
+      <div class="content">
+        <h2 class="title">Կարգավորումներ</h2>
+        <div class="row">
+          <label>Մասնակիցներ</label>
+          <select id="setup-players">
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="13">13</option>
+            <option value="14">14</option>
+            <option value="15">15</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Իմպոստոր-ներ</label>
+          <select id="setup-impostors">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Թայմեր րոպե</label>
+          <select id="setup-timer">
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="7">7</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-red" data-action="go-categories">Շարունակել</button>
+      </div>
+    </section>
+
+    <!-- Reveal (per player) -->
+    <section id="screen-reveal" class="screen">
+      <div class="bg-overlay"></div>
+      <div class="content">
+        <h2 id="reveal-title" class="title">Խաղացող Ա</h2>
+        <p class="sub">Սեղմիր՝ ցույց տալու համար</p>
+        <p id="reveal-secret" class="secret">••••••</p>
+        <button type="button" id="reveal-toggle" class="btn btn-red">Ցույց տալ</button>
+        <button type="button" class="btn btn-ghost" data-action="reset-setup">Վերադառնալ</button>
+      </div>
+    </section>
+
+    <!-- Round -->
+    <section id="screen-round" class="screen">
+      <div class="bg-overlay"></div>
+      <div class="content">
+        <h2 class="title">Ռաունդ</h2>
+        <p class="sub">Խոսեք հերթով՝ 1-2 բառով հուշում/ասոցիացիա</p>
+        <p id="round-timer" class="timer">02:00</p>
+        <button type="button" class="btn btn-red" data-action="go-vote">Քվեարկություն</button>
+        <button type="button" class="btn btn-ghost" data-action="finish-round">Վերջացնել ռաունդը</button>
+      </div>
+    </section>
+
+    <!-- Vote -->
+    <section id="screen-vote" class="screen">
+      <div class="bg-overlay"></div>
+      <div class="content">
+        <h2 class="title">Քվեարկություն</h2>
+        <p class="sub">Ո՞վ է իմպոստոր-ը</p>
+        <select id="vote-player"></select>
+        <button type="button" class="btn btn-red" data-action="check-vote">Ստուգել</button>
+        <button type="button" class="btn btn-ghost" data-action="go-round">Վերադառնալ ռաունդ</button>
+      </div>
+    </section>
+
+    <!-- Result -->
+    <section id="screen-result" class="screen">
+      <div class="bg-overlay"></div>
+      <div class="content">
+        <h2 id="result-title" class="title result-title"></h2>
+        <p id="result-details" class="result-details"></p>
+        <button type="button" class="btn btn-red" data-action="new-game">Նոր խաղ</button>
+        <button type="button" class="btn btn-ghost" data-action="go-menu">Գլխավոր մենյու</button>
+      </div>
+    </section>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
