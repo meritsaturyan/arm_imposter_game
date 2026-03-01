@@ -82,3 +82,4 @@ toolchain build python3 kivy
 ## Լիցենզիա
 
 Ծրագիրը պատրաստված է անձնական/ուսումնական օգտագործման համար։ App Store / Google Play-ում հրապարակելու համար հետևեք Apple-ի և Google-ի քաղաքականություններին։
+# armimposter
