@@ -33,7 +33,22 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: linear-gradient(180deg, #2a1a1a 0%, #1a0a0a 100%);
+  background: #1a0a0a;
+  background-size: cover;
+  background-position: center;
+}
+
+#screen-menu {
+  background-image: url('assets/menu.JPG');
+}
+
+#screen-categories,
+#screen-setup,
+#screen-reveal,
+#screen-round,
+#screen-vote,
+#screen-result {
+  background-image: url('assets/menu_blur.JPG');
 }
 
 .screen.active {
