@@ -44,6 +44,7 @@ html, body {
 
 #screen-categories,
 #screen-setup,
+#screen-names,
 #screen-reveal,
 #screen-round,
 #screen-vote,
@@ -168,6 +169,35 @@ select {
   font-weight: 700;
   letter-spacing: 2px;
   margin: 10px 0;
+}
+
+.name-input {
+  width: 100%;
+  max-width: 280px;
+  padding: 12px 14px;
+  font-size: 1rem;
+  font-family: var(--font-armenian);
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.92);
+  color: #111;
+  margin-bottom: 8px;
+}
+
+.name-input::placeholder {
+  color: rgba(0,0,0,0.5);
+}
+
+.names-box {
+  width: 100%;
+  max-width: 280px;
+  max-height: 50vh;
+  overflow-y: auto;
+  margin-bottom: 8px;
+}
+
+.content-scroll .content {
+  max-height: 90vh;
 }
 
 #vote-player {

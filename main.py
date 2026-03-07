@@ -12,11 +12,13 @@ from kivy.clock import Clock
 from kivy.core.text import LabelBase
 from kivy.core.window import Window
 from kivy.lang import Builder
+from kivy.metrics import dp
 from kivy.properties import StringProperty, NumericProperty, BooleanProperty
 from kivy.uix.screenmanager import ScreenManager, Screen, NoTransition
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from kivy.uix.spinner import SpinnerOption
+
 
 # Armenian font so letters display correctly (not boxes)
 def _register_armenian_font():
@@ -30,6 +32,7 @@ def _register_armenian_font():
             pass
     return None
 
+
 FONT_ARMENIAN = _register_armenian_font()
 
 
@@ -40,13 +43,15 @@ class ArmenianSpinnerOption(SpinnerOption):
         super().__init__(**kwargs)
 
 
-# Armenian numerals 1–15 to avoid digit rendering as squares
+# Armenian numerals 1–15 for display (optional)
 _ARM_NUMS = "ԱԲԳԴԵԶԷԸԹԺԻԼԽԾԿ"
+
 
 def _to_arm(n: int) -> str:
     if 1 <= n <= 15:
         return _ARM_NUMS[n - 1]
     return str(n)
+
 
 def _from_arm(s: str) -> int:
     if len(s) == 1 and s in _ARM_NUMS:
@@ -55,6 +60,7 @@ def _from_arm(s: str) -> int:
         return int(s)
     except ValueError:
         return 1
+
 
 # Strip adjective prefixes so we show only name/place (no "կենտրոնական Իջևան", just "Իջևան")
 _ARMENIAN_ADJECTIVES = {
@@ -66,6 +72,7 @@ _ARMENIAN_ADJECTIVES = {
     "շախմատիստ", "եղջյուրավոր",
 }
 _TWO_WORD_PREFIXES = {"Հայ հայտնի", "աշխարհի հայտնի"}
+
 
 def _word_without_adjective(word: str) -> str:
     if not word or " " not in word:
@@ -79,6 +86,7 @@ def _word_without_adjective(word: str) -> str:
     while len(parts) >= 2 and parts[0] in _ARMENIAN_ADJECTIVES:
         parts.pop(0)
     return " ".join(parts).strip() if parts else word.strip()
+
 
 # Blur in background so UI does not lag
 def _do_blur(menu_path: str, out_path: str, radius: int = 14) -> bool:
@@ -95,6 +103,7 @@ def _do_blur(menu_path: str, out_path: str, radius: int = 14) -> bool:
     except Exception:
         return False
 
+
 @dataclass
 class GameConfig:
     category: str = "Բոլորը"
@@ -103,11 +112,13 @@ class GameConfig:
     round_minutes: int = 2
     round_seconds: int = 120
 
+
 @dataclass
 class GameState:
     word: str = ""
     impostor_ids: List[int] = field(default_factory=list)  # 1-based
     reveal_index: int = 1  # current player to reveal
+
 
 KV = r"""
 #:kivy 2.3.0
@@ -135,6 +146,19 @@ KV = r"""
     size_hint: (None, None)
     size: ("280dp", "50dp")
     pos_hint: {"center_x": 0.5}
+
+<NameInput@TextInput>:
+    size_hint_y: None
+    height: "52dp"
+    multiline: False
+    padding: ["12dp", "14dp"]
+    font_size: "18sp"
+    font_name: app.font_armenian if app.font_armenian else "Roboto"
+    background_normal: ""
+    background_active: ""
+    background_color: (1, 1, 1, 0.92)
+    foreground_color: (0, 0, 0, 1)
+    hint_text_color: (0, 0, 0, 0.5)
 
 <TitleLabel@Label>:
     color: (1, 1, 1, 1)
@@ -189,7 +213,7 @@ KV = r"""
                     size_hint_y: 1
                 RedButton:
                     text: "Սկսել խաղը"
-                    on_release: app.go_setup()
+                    on_release: app.go_categories()
                 Widget:
                     size_hint_y: None
                     height: "10dp"
@@ -273,6 +297,7 @@ KV = r"""
                         font_name: "Roboto"
                         text: str(app.cfg.players)
                         values: [str(x) for x in range(3, 16)]
+                        sync_height: True
                         on_text: app.set_players(int(self.text) if self.text.isdigit() else 4)
 
                 BoxLayout:
@@ -316,7 +341,89 @@ KV = r"""
 
                 RedButton:
                     text: "Շարունակել"
-                    on_release: app.go_categories()
+                    on_release: app.go_names()
+
+                GhostButton:
+                    text: "Հետ"
+                    on_release: app.sm.current = "categories"
+
+<NamesScreen>:
+    name: "names"
+    BGImage:
+        bg_source: app.menu_blur_image
+
+        BoxLayout:
+            orientation: "vertical"
+            size_hint: 1, 1
+            padding: "20dp"
+            spacing: "10dp"
+
+            TitleLabel:
+                text: "Գրիր խաղացողների անունները"
+                halign: "center"
+                text_size: self.size
+                size_hint_y: None
+                height: self.texture_size[1] + dp(10)
+
+            BoxLayout:
+                id: names_box
+                orientation: "vertical"
+                spacing: "10dp"
+                size_hint_y: 1
+
+                NameInput:
+                    id: name_1
+                    hint_text: "Խաղացող 1 անուն"
+                NameInput:
+                    id: name_2
+                    hint_text: "Խաղացող 2 անուն"
+                NameInput:
+                    id: name_3
+                    hint_text: "Խաղացող 3 անուն"
+                NameInput:
+                    id: name_4
+                    hint_text: "Խաղացող 4 անուն"
+                NameInput:
+                    id: name_5
+                    hint_text: "Խաղացող 5 անուն"
+                NameInput:
+                    id: name_6
+                    hint_text: "Խաղացող 6 անուն"
+                NameInput:
+                    id: name_7
+                    hint_text: "Խաղացող 7 անուն"
+                NameInput:
+                    id: name_8
+                    hint_text: "Խաղացող 8 անուն"
+                NameInput:
+                    id: name_9
+                    hint_text: "Խաղացող 9 անուն"
+                NameInput:
+                    id: name_10
+                    hint_text: "Խաղացող 10 անուն"
+                NameInput:
+                    id: name_11
+                    hint_text: "Խաղացող 11 անուն"
+                NameInput:
+                    id: name_12
+                    hint_text: "Խաղացող 12 անուն"
+                NameInput:
+                    id: name_13
+                    hint_text: "Խաղացող 13 անուն"
+                NameInput:
+                    id: name_14
+                    hint_text: "Խաղացող 14 անուն"
+                NameInput:
+                    id: name_15
+                    hint_text: "Խաղացող 15 անուն"
+
+            RedButton:
+                text: "Սկսել"
+                on_release: app.confirm_names_and_start()
+
+            GhostButton:
+                text: "⬅︎ Վերադառնալ"
+                on_release: app.sm.current = "setup"
 
 <RevealScreen>:
     name: "reveal"
@@ -332,7 +439,7 @@ KV = r"""
 
                 TitleLabel:
                     id: reveal_title
-                    text: "Խաղացող Ա"
+                    text: ""
                     halign: "center"
                     text_size: self.size
 
@@ -390,6 +497,11 @@ KV = r"""
                     halign: "center"
                     text_size: self.size
 
+                SubLabel:
+                    text: "Սկսում է՝ " + (app.start_player_name or "")
+                    halign: "center"
+                    text_size: self.size
+
                 Label:
                     id: timer_label
                     text: app.timer_display
@@ -434,13 +546,18 @@ KV = r"""
                     halign: "center"
                     text_size: self.size
 
-                Spinner:
-                    id: sp_vote
+                Button:
+                    id: btn_vote_choice
                     text: "Ընտրել խաղացող"
                     font_name: app.font_armenian if app.font_armenian else "Roboto"
-                    values: [f"Խաղացող {i}" for i in range(1, app.cfg.players+1)]
+                    font_size: "18sp"
                     size_hint_y: None
                     height: "56dp"
+                    background_normal: ""
+                    background_down: ""
+                    background_color: (1, 1, 1, 0.9)
+                    color: (0, 0, 0, 1)
+                    on_release: app.open_vote_selector()
 
                 Widget:
                     size_hint_y: 1
@@ -498,34 +615,68 @@ KV = r"""
                     on_release: app.sm.current = "menu"
 """
 
-class MenuScreen(Screen): pass
-class CategoryScreen(Screen): pass
-class SetupScreen(Screen): pass
-class RevealScreen(Screen): pass
-class RoundScreen(Screen): pass
-class VoteScreen(Screen): pass
-class ResultScreen(Screen): pass
+
+class MenuScreen(Screen):
+    pass
+
+
+class CategoryScreen(Screen):
+    pass
+
+
+class SetupScreen(Screen):
+    pass
+
+
+class RevealScreen(Screen):
+    pass
+
+
+class NamesScreen(Screen):
+    pass
+
+
+class RoundScreen(Screen):
+    pass
+
+
+class VoteScreen(Screen):
+    pass
+
+
+class ResultScreen(Screen):
+    pass
+
 
 class ArmImposterApp(App):
     menu_image = StringProperty("")
     menu_blur_image = StringProperty("")
     logo_image = StringProperty("")
     font_armenian = StringProperty("")
+    start_player_name = StringProperty("")
+    timer_display = StringProperty("00:00")
 
     cfg = GameConfig()
     state = GameState(word="", impostor_ids=[], reveal_index=1)
 
     _secret_visible = BooleanProperty(False)
-    _timer_ev = None
     _remaining = NumericProperty(0)
-    timer_display = StringProperty("00:00")
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.player_names: List[str] = []
+        self._name_inputs: List = []
+        self._timer_ev = None
+        self.words: Dict[str, List[str]] = {}
 
     def build(self):
         Window.clearcolor = (0, 0, 0, 1)
+        Window.softinput_mode = "below_target"
         self.font_armenian = FONT_ARMENIAN or ""
-        # Mobile-first size (portrait phone)
-        from kivy.metrics import dp
+
+        # оставь если хочешь фикс. размер для теста; можно убрать для скорости
         Window.size = (dp(360), dp(640))
+
         self._load_assets()
         Builder.load_string(KV)
 
@@ -533,12 +684,12 @@ class ArmImposterApp(App):
         self.sm.add_widget(MenuScreen())
         self.sm.add_widget(CategoryScreen())
         self.sm.add_widget(SetupScreen())
+        self.sm.add_widget(NamesScreen())
         self.sm.add_widget(RevealScreen())
         self.sm.add_widget(RoundScreen())
         self.sm.add_widget(VoteScreen())
         self.sm.add_widget(ResultScreen())
-        # Spinner dropdown options must use Armenian font (set in Python so it applies on open)
-        self.sm.get_screen("vote").ids.sp_vote.option_cls = ArmenianSpinnerOption
+
         return self.sm
 
     def _load_assets(self):
@@ -550,9 +701,10 @@ class ArmImposterApp(App):
         menu_path = os.path.join(assets, "menu.JPG")
         logo_path = os.path.join(assets, "logo.JPG")
         blur_path = os.path.join(assets, "menu_blur.JPG")
+
         self.menu_image = menu_path if os.path.exists(menu_path) else ""
         self.logo_image = logo_path if os.path.exists(logo_path) else ""
-        # Use blur if already exists; else show menu first, generate blur in background
+
         if os.path.exists(blur_path):
             self.menu_blur_image = blur_path
         else:
@@ -561,8 +713,8 @@ class ArmImposterApp(App):
 
             def _blur_done(dt):
                 try:
-                    from kivy.app import App
-                    if App.get_running_app() is app_ref and os.path.exists(blur_path):
+                    from kivy.app import App as KivyApp
+                    if KivyApp.get_running_app() is app_ref and os.path.exists(blur_path):
                         app_ref.menu_blur_image = blur_path
                 except Exception:
                     pass
@@ -570,10 +722,10 @@ class ArmImposterApp(App):
             def _run_blur():
                 if _do_blur(menu_path, blur_path):
                     Clock.schedule_once(_blur_done, 0)
+
             threading.Thread(target=_run_blur, daemon=True).start()
 
         words_path = os.path.join(data, "words_hy.json")
-        self.words: Dict[str, List[str]] = {}
         try:
             if os.path.exists(words_path):
                 with open(words_path, "r", encoding="utf-8") as f:
@@ -590,6 +742,7 @@ class ArmImposterApp(App):
             sm = getattr(self, "sm", None) or self.root
             if sm and hasattr(sm, "current"):
                 sm.current = "setup"
+
         Clock.schedule_once(_switch, 0)
 
     def go_categories(self):
@@ -597,15 +750,17 @@ class ArmImposterApp(App):
             sm = getattr(self, "sm", None) or self.root
             if sm and hasattr(sm, "current"):
                 sm.current = "categories"
+
         Clock.schedule_once(_switch, 0)
 
     def select_category(self, category: str):
         self.cfg.category = category
-        self.start_game()
+        self.go_setup()
 
     def set_players(self, n: int):
-        self.cfg.players = max(3, min(15, n))
+        self.cfg.players = max(3, min(15, int(n)))
         self.cfg.impostors = min(self.cfg.impostors, max(1, self.cfg.players // 2))
+
         sm = getattr(self, "sm", None)
         if sm:
             try:
@@ -615,7 +770,7 @@ class ArmImposterApp(App):
                 pass
 
     def set_impostors(self, n: int):
-        self.cfg.impostors = max(1, min(n, max(1, self.cfg.players // 2)))
+        self.cfg.impostors = max(1, min(int(n), max(1, self.cfg.players // 2)))
         sm = getattr(self, "sm", None)
         if sm:
             try:
@@ -623,9 +778,6 @@ class ArmImposterApp(App):
                 scr.ids.sp_impostors.text = str(self.cfg.impostors)
             except Exception:
                 pass
-
-    def set_timer(self, sec: int):
-        self.cfg.round_seconds = max(60, int(sec))
 
     def set_timer_minutes(self, minutes: int):
         self.cfg.round_minutes = max(1, min(10, int(minutes)))
@@ -646,33 +798,91 @@ class ArmImposterApp(App):
         if sm:
             sm.current = "setup"
 
-    # Game
-    def start_game(self):
-        self.cfg.category = self.cfg.category or "Բոլորը"
+    def go_names(self):
+        sm = getattr(self, "sm", None)
+        if not sm:
+            return
+
         self.cfg.players = max(3, min(15, self.cfg.players))
         self.cfg.impostors = max(1, min(self.cfg.impostors, self.cfg.players // 2))
-        self.cfg.round_minutes = max(1, min(10, self.cfg.round_minutes))
-        self.cfg.round_seconds = self.cfg.round_minutes * 60
+        n = self.cfg.players
+
+        scr = sm.get_screen("names")
+        self._name_inputs = []
+
+        old_names = self.player_names[:] if self.player_names else []
+
+        for i in range(15):
+            inp = scr.ids[f"name_{i + 1}"]
+            inp.hint_text = f"Խաղացող {i + 1} անուն"
+
+            if i < len(old_names):
+                inp.text = old_names[i]
+            else:
+                inp.text = ""
+
+            if i < n:
+                inp.opacity = 1
+                inp.disabled = False
+                inp.height = dp(52)
+                inp.size_hint_y = None
+                self._name_inputs.append(inp)
+            else:
+                inp.opacity = 0
+                inp.disabled = True
+                inp.height = 0
+                inp.size_hint_y = None
+                inp.text = ""          
+
+        sm.current = "names"
+
+        if self._name_inputs:
+            Clock.schedule_once(lambda dt: setattr(self._name_inputs[0], "focus", True), 0.1)
+
+    def confirm_names_and_start(self):
+        names = [ti.text.strip() for ti in getattr(self, "_name_inputs", [])]
+
+        if len(names) != self.cfg.players:
+            self._toast("Փորձիր կրկին")
+            return
+
+        if any(not n for n in names):
+            self._toast("Բոլոր անունները պարտադիր են")
+            return
+
+        self.player_names = names
+        self.start_player_name = random.choice(self.player_names)
+        self._start_game_after_names()
+
+    def _start_game_after_names(self):
+        self.cfg.category = self.cfg.category or "Բոլորը"
+        self.cfg.round_seconds = max(60, self.cfg.round_minutes * 60)
+
         pool = self.words.get(self.cfg.category) or []
         if not pool or not isinstance(pool, list):
             self._toast("Բառերի ցուցակը դատարկ է")
             return
+
         self.state.word = _word_without_adjective(random.choice(pool))
 
-        # pick impostor ids (1-based)
         ids = list(range(1, self.cfg.players + 1))
         random.shuffle(ids)
         self.state.impostor_ids = sorted(ids[: self.cfg.impostors])
-
         self.state.reveal_index = 1
         self._secret_visible = False
+
         self._update_reveal_content()
         sm = getattr(self, "sm", None)
         if sm:
             sm.current = "reveal"
 
+    def _player_display_name(self, index: int) -> str:
+        # show real name + Armenian index
+        if 1 <= index <= len(self.player_names):
+            return f"{self.player_names[index - 1]} (Խաղացող {_to_arm(index)})"
+        return f"Խաղացող {_to_arm(index)}"
+
     def toggle_secret(self):
-        scr: RevealScreen = self.sm.get_screen("reveal")
         was_visible = self._secret_visible
         self._secret_visible = not self._secret_visible
         self._update_reveal_content()
@@ -685,12 +895,13 @@ class ArmImposterApp(App):
         sm = getattr(self, "sm", None)
         if not sm:
             return
+
         scr = sm.get_screen("reveal")
         player = self.state.reveal_index
         impostors = self.state.impostor_ids or []
         is_impostor = player in impostors
 
-        scr.ids.reveal_title.text = f"Խաղացող {_to_arm(player)}"
+        scr.ids.reveal_title.text = self._player_display_name(player)
 
         if self._secret_visible:
             scr.ids.secret_label.text = "ԻՄՊՈՍՏՈՐ" if is_impostor else self.state.word
@@ -705,15 +916,15 @@ class ArmImposterApp(App):
             self._secret_visible = False
             self._update_reveal_content()
         else:
-            # all revealed -> start round
             self.start_round()
 
+    # Round timer
     def start_round(self):
-        self.cfg.round_seconds = max(60, self.cfg.round_minutes * 60)
         self._remaining = int(self.cfg.round_seconds)
         self._stop_timer()
         self._update_timer_display()
         self._timer_ev = Clock.schedule_interval(self._tick, 1.0)
+
         sm = getattr(self, "sm", None)
         if sm:
             sm.current = "round"
@@ -741,16 +952,72 @@ class ArmImposterApp(App):
                 pass
             self._timer_ev = None
 
+    # Vote
     def go_vote(self):
         self._stop_timer()
         sm = getattr(self, "sm", None)
         if not sm:
             return
+
         vote_scr = sm.get_screen("vote")
-        vote_scr.ids.sp_vote.values = [f"Խաղացող {_to_arm(i)}" for i in range(1, self.cfg.players + 1)]
-        if vote_scr.ids.sp_vote.values:
-            vote_scr.ids.sp_vote.text = vote_scr.ids.sp_vote.values[0]
+        vote_scr.ids.btn_vote_choice.text = "Ընտրել խաղացող"
         sm.current = "vote"
+
+    def open_vote_selector(self):
+        """Open a popup with list of player names to choose the impostor vote."""
+        sm = getattr(self, "sm", None)
+        if not sm:
+            return
+        from kivy.uix.scrollview import ScrollView
+        from kivy.uix.button import Button as Btn
+
+        content = ScrollView(do_scroll_x=False, size_hint_y=None)
+        layout = Builder.load_string("""
+BoxLayout:
+    orientation: "vertical"
+    size_hint_y: None
+    height: self.minimum_height
+    padding: "10dp"
+    spacing: "8dp"
+""")
+        content.add_widget(layout)
+        # height of content = min(n * 52 + spacing, 70% of window)
+        n = self.cfg.players
+        content.height = min(n * dp(52) + (n - 1) * dp(8) + dp(20), Window.height * 0.7)
+        layout.bind(minimum_height=layout.setter("height"))
+
+        popup = Popup(
+            title="Ո՞վ է իմպոստոր-ը",
+            content=content,
+            size_hint=(0.85, None),
+            height=min(n * dp(52) + (n - 1) * dp(8) + dp(60), Window.height * 0.75),
+            auto_dismiss=True,
+        )
+
+        font_name = getattr(self, "font_armenian", None) or "Roboto"
+        for i in range(1, n + 1):
+            name = self._player_display_name(i)
+            btn = Btn(
+                text=name,
+                size_hint_y=None,
+                height=dp(52),
+                font_name=font_name,
+                font_size="18sp",
+            )
+            btn.bind(on_release=lambda *args, p=popup, sel=name: self._on_vote_selected(p, sel))
+            layout.add_widget(btn)
+
+        popup.open()
+
+    def _on_vote_selected(self, popup: Popup, selection: str):
+        sm = getattr(self, "sm", None)
+        if sm:
+            try:
+                vote_scr = sm.get_screen("vote")
+                vote_scr.ids.btn_vote_choice.text = selection
+            except Exception:
+                pass
+        popup.dismiss()
 
     def finish_round(self, time_ran_out: bool = False):
         self._stop_timer()
@@ -761,35 +1028,45 @@ class ArmImposterApp(App):
         if sm:
             sm.current = "vote"
 
+    def _parse_player_index_from_vote(self, selection: str) -> int:
+        if not selection:
+            return -1
+        for i in range(1, self.cfg.players + 1):
+            if selection == self._player_display_name(i):
+                return i
+        # fallback: last token could be Armenian letter index
+        part = selection.split()[-1].strip("()")
+        return _from_arm(part)
+
     def check_vote(self, selection: Optional[str] = None):
         sm = getattr(self, "sm", None)
         if sm:
             try:
                 vote_scr = sm.get_screen("vote")
-                selection = vote_scr.ids.sp_vote.text
+                selection = vote_scr.ids.btn_vote_choice.text
             except Exception:
                 selection = selection or ""
         else:
             selection = selection or ""
-        if not selection or not selection.startswith("Խաղացող"):
+
+        if not selection or selection == "Ընտրել խաղացող":
             self._toast("Ընտրիր խաղացող")
             return
-        part = selection.split()[-1]
-        n = _from_arm(part)
+
+        n = self._parse_player_index_from_vote(selection)
         if n < 1 or n > self.cfg.players:
             self._toast("Սխալ ընտրություն")
             return
 
         caught = n in self.state.impostor_ids
-        res_scr: ResultScreen = self.sm.get_screen("result")
-
         if caught:
             self._show_result(team_won=True)
         else:
+            # +60 seconds penalty/bonus
             self._remaining += 60
             self._update_timer_display()
+            self._stop_timer()
             self._timer_ev = Clock.schedule_interval(self._tick, 1.0)
-            sm = getattr(self, "sm", None)
             if sm:
                 sm.current = "round"
 
@@ -797,14 +1074,18 @@ class ArmImposterApp(App):
         sm = getattr(self, "sm", None)
         if not sm:
             return
+
         res_scr = sm.get_screen("result")
         if team_won:
+            # Правильно отгадали импостора — зелёный «Հաղթանակ»
             res_scr.ids.res_title.text = "Հաղթանակ"
-            res_scr.ids.res_title.color = (0, 0.85, 0.2, 1)
+            res_scr.ids.res_title.color = (0.15, 0.95, 0.25, 1)  # яркий зелёный
         else:
+            # Победил импостор — красный «Հաղթեց իմպոստորը»
             res_scr.ids.res_title.text = "Հաղթեց իմպոստորը"
-            res_scr.ids.res_title.color = (0.95, 0.2, 0.2, 1)
-        impostors_str = ", ".join(_to_arm(i) for i in (self.state.impostor_ids or []))
+            res_scr.ids.res_title.color = (1, 0.15, 0.15, 1)  # яркий красный
+
+        impostors_str = ", ".join(self._player_display_name(i) for i in (self.state.impostor_ids or []))
         res_scr.ids.res_details.text = f"Բառը՝ {self.state.word}\nԻմպոստոր-ներ՝ {impostors_str}"
         res_scr.ids.res_details.color = (1, 1, 1, 1)
         sm.current = "result"
@@ -817,13 +1098,17 @@ class ArmImposterApp(App):
             sm.current = "setup"
 
     def _toast(self, text: str):
-        lbl = Label(text=text, color=(1,1,1,1))
+        lbl = Label(text=text, color=(1, 1, 1, 1))
         if FONT_ARMENIAN:
             lbl.font_name = FONT_ARMENIAN
-        Popup(title="",
-              content=lbl,
-              size_hint=(0.8, 0.25),
-              auto_dismiss=True).open()
+
+        Popup(
+            title="",
+            content=lbl,
+            size_hint=(0.8, 0.25),
+            auto_dismiss=True,
+        ).open()
+
 
 if __name__ == "__main__":
     ArmImposterApp().run()

@@ -5,7 +5,10 @@
   const ADJECTIVES = new Set([
     'կենտրոնական', 'գեղեցիկ', 'հին', 'նոր', 'աֆրիկյան', 'ասիական', 'պատմական',
     'լեռնային', 'զբոսաշրջային', 'ծովափնյա', 'գիշերային', 'արևոտ', 'անձրևոտ',
-    'մշակութային', 'Հայ', 'աշխարհի', 'հայտնի', 'երաժիշտ', 'երգիչ', 'դերասան'
+    'մշակութային', 'ապակյա', 'պլաստիկ', 'փայլուն', 'դասական', 'ժամանակակից', 'թանկ',
+    'բանկային', 'միկրոալիքային', 'Հայ', 'աշխարհի', 'հայտնի', 'երաժիշտ', 'երգիչ', 'դերասան',
+    'մոդել', 'ֆուտբոլիստ', 'գիտնական', 'բլոգեր', 'ռեժիսոր', 'գործարար', 'քաղաքական',
+    'շախմատիստ', 'եղջյուրավոր'
   ]);
   const TWO_WORD = new Set(['Հայ հայտնի', 'աշխարհի հայտնի']);
 
@@ -36,6 +39,7 @@
     menu: document.getElementById('screen-menu'),
     categories: document.getElementById('screen-categories'),
     setup: document.getElementById('screen-setup'),
+    names: document.getElementById('screen-names'),
     reveal: document.getElementById('screen-reveal'),
     round: document.getElementById('screen-round'),
     vote: document.getElementById('screen-vote'),
@@ -56,11 +60,20 @@
     revealIndex: 1,
     secretVisible: false,
     remaining: 0,
-    timerId: null
+    timerId: null,
+    playerNames: [],
+    startPlayerName: ''
   };
 
+  function playerDisplayName(index) {
+    if (index >= 1 && index <= state.playerNames.length) {
+      return state.playerNames[index - 1] + ' (Խաղացող ' + toArm(index) + ')';
+    }
+    return 'Խաղացող ' + toArm(index);
+  }
+
   function showScreen(name) {
-    Object.values(screens).forEach(s => s.classList.remove('active'));
+    Object.values(screens).forEach(s => { if (s) s.classList.remove('active'); });
     const el = screens[name];
     if (el) el.classList.add('active');
   }
@@ -91,17 +104,51 @@
     document.getElementById('setup-timer').value = String(cfg.roundMinutes);
   }
 
-  function setupChange() {
-    cfg.players = Math.max(3, Math.min(15, parseInt(document.getElementById('setup-players').value, 10) || 4));
-    cfg.impostors = Math.max(1, Math.min(cfg.impostors, Math.floor(cfg.players / 2)));
-    cfg.impostors = Math.max(1, Math.min(parseInt(document.getElementById('setup-impostors').value, 10) || 1, Math.floor(cfg.players / 2)));
-    cfg.roundMinutes = Math.max(1, Math.min(10, parseInt(document.getElementById('setup-timer').value, 10) || 2));
-    cfg.roundSeconds = cfg.roundMinutes * 60;
-    document.getElementById('setup-impostors').value = String(cfg.impostors);
+  function goNames() {
+    setupChange();
+    const n = cfg.players;
+    const box = document.getElementById('names-box');
+    box.innerHTML = '';
+    for (let i = 1; i <= 15; i++) {
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.placeholder = 'Խաղացող ' + i + ' անուն';
+      inp.className = 'name-input';
+      inp.id = 'name-' + i;
+      if (i <= n) {
+        inp.style.display = 'block';
+        if (state.playerNames[i - 1]) inp.value = state.playerNames[i - 1];
+      } else {
+        inp.style.display = 'none';
+      }
+      box.appendChild(inp);
+    }
+    showScreen('names');
   }
 
-  function startGame(category) {
-    cfg.category = category || cfg.category;
+  function confirmNames() {
+    const names = [];
+    for (let i = 1; i <= cfg.players; i++) {
+      const el = document.getElementById('name-' + i);
+      if (!el) continue;
+      const v = (el.value || '').trim();
+      names.push(v);
+    }
+    if (names.length !== cfg.players) {
+      alert('Փորձիր կրկին');
+      return;
+    }
+    if (names.some(function (n) { return !n; })) {
+      alert('Բոլոր անունները պարտադիր են');
+      return;
+    }
+    state.playerNames = names;
+    state.startPlayerName = state.playerNames[Math.floor(Math.random() * state.playerNames.length)];
+    startGameAfterNames();
+  }
+
+  function startGameAfterNames() {
+    cfg.roundSeconds = Math.max(60, cfg.roundMinutes * 60);
     const pool = getPool();
     if (!pool.length) {
       alert('Բառերի ցուցակը դատարկ է');
@@ -120,10 +167,24 @@
     showScreen('reveal');
   }
 
+  function setupChange() {
+    cfg.players = Math.max(3, Math.min(15, parseInt(document.getElementById('setup-players').value, 10) || 4));
+    cfg.impostors = Math.max(1, Math.min(cfg.impostors, Math.floor(cfg.players / 2)));
+    cfg.impostors = Math.max(1, Math.min(parseInt(document.getElementById('setup-impostors').value, 10) || 1, Math.floor(cfg.players / 2)));
+    cfg.roundMinutes = Math.max(1, Math.min(10, parseInt(document.getElementById('setup-timer').value, 10) || 2));
+    cfg.roundSeconds = cfg.roundMinutes * 60;
+    document.getElementById('setup-impostors').value = String(cfg.impostors);
+  }
+
+  function selectCategory(category) {
+    cfg.category = category;
+    goSetup();
+  }
+
   function updateReveal() {
     const player = state.revealIndex;
     const isImpostor = state.impostorIds.includes(player);
-    document.getElementById('reveal-title').textContent = 'Խաղացող ' + toArm(player);
+    document.getElementById('reveal-title').textContent = playerDisplayName(player);
     const secretEl = document.getElementById('reveal-secret');
     const btnEl = document.getElementById('reveal-toggle');
     if (state.secretVisible) {
@@ -157,6 +218,8 @@
     if (state.timerId) clearInterval(state.timerId);
     updateTimerDisplay();
     state.timerId = setInterval(tick, 1000);
+    var startsEl = document.getElementById('round-starts');
+    if (startsEl) startsEl.textContent = 'Սկսում է՝ ' + (state.startPlayerName || '');
     showScreen('round');
   }
 
@@ -188,12 +251,22 @@
     sel.innerHTML = '';
     for (let i = 1; i <= cfg.players; i++) {
       const opt = document.createElement('option');
-      opt.value = 'Խաղացող ' + toArm(i);
-      opt.textContent = 'Խաղացող ' + toArm(i);
+      const label = playerDisplayName(i);
+      opt.value = label;
+      opt.textContent = label;
       sel.appendChild(opt);
     }
     sel.selectedIndex = 0;
     showScreen('vote');
+  }
+
+  function parsePlayerIndexFromVote(selection) {
+    if (!selection) return -1;
+    for (let i = 1; i <= cfg.players; i++) {
+      if (selection === playerDisplayName(i)) return i;
+    }
+    var part = selection.split(/\s+/).pop().replace(/[()]/g, '');
+    return fromArm(part);
   }
 
   function goRound() {
@@ -212,12 +285,11 @@
   function checkVote() {
     const sel = document.getElementById('vote-player');
     const text = sel.options[sel.selectedIndex].value;
-    if (!text || !text.startsWith('Խաղացող')) {
+    if (!text || text === 'Ընտրել խաղացող') {
       alert('Ընտրիր խաղացող');
       return;
     }
-    const part = text.split(/\s+/).pop();
-    const n = fromArm(part);
+    const n = parsePlayerIndexFromVote(text);
     if (n < 1 || n > cfg.players) {
       alert('Սխալ ընտրություն');
       return;
@@ -246,7 +318,8 @@
       titleEl.textContent = 'Հաղթեց իմպոստորը';
       titleEl.classList.add('lose');
     }
-    detailsEl.textContent = 'Բառը՝ ' + state.word + '\nԻմպոստոր-ներ՝ ' + state.impostorIds.map(toArm).join(', ');
+    var impostorsStr = (state.impostorIds || []).map(function (i) { return playerDisplayName(i); }).join(', ');
+    detailsEl.textContent = 'Բառը՝ ' + state.word + '\nԻմպոստոր-ներ՝ ' + impostorsStr;
     showScreen('result');
   }
 
@@ -280,6 +353,8 @@
       if (action === 'go-setup') goSetup();
       else if (action === 'go-categories') goCategories();
       else if (action === 'go-menu') goMenu();
+      else if (action === 'go-names') goNames();
+      else if (action === 'confirm-names') confirmNames();
       else if (action === 'go-vote') goVote();
       else if (action === 'go-round') goRound();
       else if (action === 'finish-round') finishRound();
@@ -291,7 +366,7 @@
 
   document.querySelectorAll('[data-category]').forEach(btn => {
     btn.addEventListener('click', function () {
-      startGame(this.getAttribute('data-category'));
+      selectCategory(this.getAttribute('data-category'));
     });
   });
 
